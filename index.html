@@ -68,11 +68,11 @@
 
                     <div class="settings-panel">
                         <div class="setting-group">
-                            <label>AI 난이도</label>
+                            <label>AI 난이도 선택</label>
                             <div class="pill-selector" id="ai-difficulty-select">
-                                <button type="button" class="pill-btn" data-diff="easy">입문</button>
-                                <button type="button" class="pill-btn active" data-diff="normal">일반</button>
-                                <button type="button" class="pill-btn" data-diff="hard">마스터</button>
+                                <button type="button" class="pill-btn diff-easy" data-diff="easy">🌱 쉬움</button>
+                                <button type="button" class="pill-btn diff-normal active" data-diff="normal">⚡ 보통</button>
+                                <button type="button" class="pill-btn diff-hard" data-diff="hard">🔥 어려움</button>
                             </div>
                         </div>
                         <div class="setting-group">
@@ -81,6 +81,14 @@
                                 <button type="button" class="pill-btn active" data-first="player">🔴 내가 선공</button>
                                 <button type="button" class="pill-btn" data-first="pc">🔵 PC 선공</button>
                             </div>
+                        </div>
+                    </div>
+
+                    <div class="diff-guide-card" id="diff-guide-card">
+                        <span class="diff-guide-icon" id="diff-guide-icon">⚡</span>
+                        <div class="diff-guide-content">
+                            <span class="diff-guide-title" id="diff-guide-title">보통 난이도</span>
+                            <p class="diff-guide-desc" id="diff-guide-desc">빈 땅 점령과 상대 땅 탈환을 균형 있게 노리는 표준 AI입니다.</p>
                         </div>
                     </div>
 
@@ -139,7 +147,10 @@
                         <div class="avatar-coin blue-coin-3d"></div>
                     </div>
                     <div class="player-info">
-                        <span class="player-role">AI OPPONENT</span>
+                        <div class="role-with-badge">
+                            <span class="player-role">AI OPPONENT</span>
+                            <span class="hud-diff-pill diff-normal" id="hud-diff-badge">⚡ 보통</span>
+                        </div>
                         <h2 class="player-name">컴퓨터 (블루)</h2>
                         <div class="score-display">
                             <span class="score-num" id="pc-score">0</span>
@@ -203,6 +214,7 @@
                     </div>
 
                     <h1 class="result-title" id="result-title">VICTORY!</h1>
+                    <div class="result-diff-badge diff-normal" id="result-diff-badge">⚡ 보통 난이도</div>
                     <p class="result-subtitle" id="result-subtitle">당신이 전장을 완벽히 지배했습니다!</p>
 
                     <!-- Score Comparison Board -->

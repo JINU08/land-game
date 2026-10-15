@@ -354,13 +354,94 @@ body {
 }
 
 .pill-btn.active {
-    background: rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.14);
     color: #fff;
     box-shadow: 0 2px 8px rgba(0,0,0,0.4);
 }
 
+/* Distinct Difficulty Pill Active Styles */
+.pill-btn.diff-easy.active {
+    background: rgba(16, 185, 129, 0.2);
+    color: #34d399;
+    border: 1px solid rgba(16, 185, 129, 0.5);
+    box-shadow: 0 0 12px rgba(16, 185, 129, 0.35);
+}
+
+.pill-btn.diff-normal.active {
+    background: rgba(0, 210, 255, 0.2);
+    color: #38bdf8;
+    border: 1px solid rgba(0, 210, 255, 0.5);
+    box-shadow: 0 0 12px rgba(0, 210, 255, 0.35);
+}
+
+.pill-btn.diff-hard.active {
+    background: rgba(255, 42, 95, 0.2);
+    color: #ff758f;
+    border: 1px solid rgba(255, 42, 95, 0.5);
+    box-shadow: 0 0 12px rgba(255, 42, 95, 0.35);
+}
+
 .pill-btn:hover:not(.active) {
     color: #cbd5e1;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+/* Difficulty Description Guide Card */
+.diff-guide-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: rgba(12, 18, 30, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+.diff-guide-card.easy-mode {
+    border-color: rgba(16, 185, 129, 0.3);
+    background: rgba(16, 185, 129, 0.06);
+}
+
+.diff-guide-card.normal-mode {
+    border-color: rgba(0, 210, 255, 0.3);
+    background: rgba(0, 210, 255, 0.06);
+}
+
+.diff-guide-card.hard-mode {
+    border-color: rgba(255, 42, 95, 0.3);
+    background: rgba(255, 42, 95, 0.06);
+}
+
+.diff-guide-icon {
+    font-size: 1.4rem;
+    flex-shrink: 0;
+    line-height: 1;
+}
+
+.diff-guide-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.diff-guide-title {
+    font-size: 0.8rem;
+    font-weight: 800;
+    color: #f1f5f9;
+    letter-spacing: 0.5px;
+}
+
+.diff-guide-card.easy-mode .diff-guide-title { color: #34d399; }
+.diff-guide-card.normal-mode .diff-guide-title { color: #38bdf8; }
+.diff-guide-card.hard-mode .diff-guide-title { color: #ff758f; }
+
+.diff-guide-desc {
+    font-size: 0.76rem;
+    color: #94a3b8;
+    line-height: 1.4;
+    margin: 0;
 }
 
 /* Glowing Buttons */
@@ -479,11 +560,50 @@ body {
     flex: 1;
 }
 
+.role-with-badge {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 2px;
+}
+
 .player-role {
     font-size: 0.68rem;
     font-family: var(--font-heading);
     letter-spacing: 1.5px;
     color: #8b9bb4;
+}
+
+.hud-diff-pill {
+    font-family: var(--font-body);
+    font-size: 0.65rem;
+    font-weight: 800;
+    padding: 2px 7px;
+    border-radius: 10px;
+    letter-spacing: 0.3px;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    transition: all 0.2s ease;
+}
+
+.hud-diff-pill.diff-easy {
+    background: rgba(16, 185, 129, 0.2);
+    color: #34d399;
+    border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+.hud-diff-pill.diff-normal {
+    background: rgba(0, 210, 255, 0.2);
+    color: #38bdf8;
+    border: 1px solid rgba(0, 210, 255, 0.4);
+}
+
+.hud-diff-pill.diff-hard {
+    background: rgba(255, 42, 95, 0.2);
+    color: #ff758f;
+    border: 1px solid rgba(255, 42, 95, 0.4);
 }
 
 .player-name {
@@ -993,6 +1113,38 @@ body {
 .result-title.draw {
     color: #00d2ff;
     text-shadow: 0 0 25px var(--blue-glow);
+}
+
+.result-diff-badge {
+    display: inline-block;
+    font-size: 0.8rem;
+    font-weight: 800;
+    padding: 4px 14px;
+    border-radius: 20px;
+    margin-bottom: 12px;
+    letter-spacing: 0.5px;
+    backdrop-filter: blur(8px);
+}
+
+.result-diff-badge.diff-easy {
+    background: rgba(16, 185, 129, 0.2);
+    color: #34d399;
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    box-shadow: 0 0 12px rgba(16, 185, 129, 0.25);
+}
+
+.result-diff-badge.diff-normal {
+    background: rgba(0, 210, 255, 0.2);
+    color: #38bdf8;
+    border: 1px solid rgba(0, 210, 255, 0.4);
+    box-shadow: 0 0 12px rgba(0, 210, 255, 0.25);
+}
+
+.result-diff-badge.diff-hard {
+    background: rgba(255, 42, 95, 0.2);
+    color: #ff758f;
+    border: 1px solid rgba(255, 42, 95, 0.4);
+    box-shadow: 0 0 12px rgba(255, 42, 95, 0.25);
 }
 
 .result-subtitle {

@@ -5,6 +5,42 @@
 const BOARD_SIZE = 6;
 const TOTAL_TILES = BOARD_SIZE * BOARD_SIZE;
 
+const DIFFICULTY_CONFIG = {
+    easy: {
+        id: 'easy',
+        label: '쉬움',
+        fullLabel: '🌱 쉬움',
+        className: 'diff-easy',
+        cardClass: 'easy-mode',
+        icon: '🌱',
+        title: '쉬움 난이도 (입문/연습)',
+        desc: '가끔 빈틈을 보이거나 실수를 하는 초보자 맞춤형 AI입니다. 십자 점령 규칙을 익히기에 좋습니다.',
+        thinkDelay: 420
+    },
+    normal: {
+        id: 'normal',
+        label: '보통',
+        fullLabel: '⚡ 보통',
+        className: 'diff-normal',
+        cardClass: 'normal-mode',
+        icon: '⚡',
+        title: '보통 난이도 (표준/전술)',
+        desc: '현재 턴에서 가장 많은 땅을 점령하고 상대 땅을 탈환하는 균형 잡힌 실속파 AI입니다.',
+        thinkDelay: 650
+    },
+    hard: {
+        id: 'hard',
+        label: '어려움',
+        fullLabel: '🔥 어려움',
+        className: 'diff-hard',
+        cardClass: 'hard-mode',
+        icon: '🔥',
+        title: '어려움 난이도 (마스터/전략)',
+        desc: '1수 앞 상대의 반격을 예측하고, 플레이어의 핵심 요충지를 사전에 봉쇄하는 지능형 AI입니다.',
+        thinkDelay: 800
+    }
+};
+
 class LandGame {
     constructor() {
         this.board = [];
@@ -36,10 +72,17 @@ class LandGame {
         this.diffSelect = document.getElementById('ai-difficulty-select');
         this.turnOrderSelect = document.getElementById('turn-order-select');
 
+        // Difficulty Guide Elements
+        this.diffGuideCard = document.getElementById('diff-guide-card');
+        this.diffGuideIcon = document.getElementById('diff-guide-icon');
+        this.diffGuideTitle = document.getElementById('diff-guide-title');
+        this.diffGuideDesc = document.getElementById('diff-guide-desc');
+
         // Game HUD
         this.boardEl = document.getElementById('game-board');
         this.cardPlayer = document.getElementById('card-player');
         this.cardPc = document.getElementById('card-pc');
+        this.hudDiffBadge = document.getElementById('hud-diff-badge');
         this.playerScoreEl = document.getElementById('player-score');
         this.pcScoreEl = document.getElementById('pc-score');
         this.playerPercentEl = document.getElementById('player-percent');
@@ -59,8 +102,8 @@ class LandGame {
         this.btnModalConfirm = document.getElementById('btn-modal-confirm');
 
         // Result Elements
-
         this.resultTitle = document.getElementById('result-title');
+        this.resultDiffBadge = document.getElementById('result-diff-badge');
         this.resultSubtitle = document.getElementById('result-subtitle');
         this.resultBadgeIcon = document.getElementById('result-badge-icon');
         this.resPlayerScore = document.getElementById('result-player-score');
@@ -72,6 +115,25 @@ class LandGame {
         this.finalStatsSummary = document.getElementById('final-stats-summary');
         this.btnReplay = document.getElementById('btn-replay');
         this.btnGoIntro = document.getElementById('btn-go-intro');
+
+        // Initial Guide Render
+        this.updateDiffGuide();
+    }
+
+    updateDiffGuide() {
+        const config = DIFFICULTY_CONFIG[this.difficulty] || DIFFICULTY_CONFIG.normal;
+        if (this.diffGuideCard) {
+            this.diffGuideCard.className = `diff-guide-card ${config.cardClass}`;
+        }
+        if (this.diffGuideIcon) {
+            this.diffGuideIcon.textContent = config.icon;
+        }
+        if (this.diffGuideTitle) {
+            this.diffGuideTitle.textContent = config.title;
+        }
+        if (this.diffGuideDesc) {
+            this.diffGuideDesc.textContent = config.desc;
+        }
     }
 
     initEvents() {
@@ -82,6 +144,7 @@ class LandGame {
             this.diffSelect.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             this.difficulty = btn.dataset.diff;
+            this.updateDiffGuide();
             window.soundManager.playClick();
         });
 
@@ -320,7 +383,8 @@ class LandGame {
 
         // Event log
         const coordsStr = `(${r + 1}, ${c + 1})`;
-        const sideName = isPlayer ? '당신(레드)' : '컴퓨터(블루)';
+        const config = DIFFICULTY_CONFIG[this.difficulty] || DIFFICULTY_CONFIG.normal;
+        const sideName = isPlayer ? '당신(레드)' : `컴퓨터[${config.label}](블루)`;
         let logMsg = `${sideName}이 ${coordsStr}에 코인을 배치! 총 ${capturedTargets.length}칸을 점령했습니다.`;
         if (stealsCount > 0) {
             logMsg += ` (상대 땅 ${stealsCount}칸 탈환!)`;
@@ -350,21 +414,19 @@ class LandGame {
     }
 
     // ==========================================================================
-    // AI LOGIC
+    // AI LOGIC (쉬움, 보통, 어려움)
     // ==========================================================================
     triggerPCTurn() {
-        this.turnTextEl.textContent = 'PC가 최적의 수를 분석하고 있습니다...';
+        const config = DIFFICULTY_CONFIG[this.difficulty] || DIFFICULTY_CONFIG.normal;
+        this.turnTextEl.textContent = `PC(${config.label})가 최적의 수를 분석하고 있습니다...`;
         
-        // Human-like thinking delay
-        const thinkDelay = this.difficulty === 'easy' ? 450 : 700;
-
         setTimeout(() => {
             if (this.isGameOver) return;
             const bestMove = this.calculateBestAIMove();
             if (bestMove) {
                 this.executeMove(bestMove.r, bestMove.c, 'pc');
             }
-        }, thinkDelay);
+        }, config.thinkDelay);
     }
 
     calculateBestAIMove() {
@@ -379,85 +441,192 @@ class LandGame {
 
         if (availableSlots.length === 0) return null;
 
-        // Easy Mode: Random pick 60% of the time, otherwise greedily pick
         if (this.difficulty === 'easy') {
-            if (Math.random() < 0.6) {
-                return availableSlots[Math.floor(Math.random() * availableSlots.length)];
-            }
+            return this.calculateEasyMove(availableSlots);
+        } else if (this.difficulty === 'hard') {
+            return this.calculateHardMove(availableSlots);
+        } else {
+            return this.calculateNormalMove(availableSlots);
         }
-
-        // Evaluate all candidate moves
-        let bestScore = -Infinity;
-        let candidateMoves = [];
-
-        for (const slot of availableSlots) {
-            const score = this.evaluateSlot(slot.r, slot.c);
-            if (score > bestScore) {
-                bestScore = score;
-                candidateMoves = [slot];
-            } else if (score === bestScore) {
-                candidateMoves.push(slot);
-            }
-        }
-
-        // Return random choice among best tied moves
-        return candidateMoves[Math.floor(Math.random() * candidateMoves.length)];
     }
 
-    evaluateSlot(r, c) {
+    // [쉬움] 65% 확률 무작위 수, 35% 기본 점령 수(단순 득점)
+    calculateEasyMove(availableSlots) {
+        if (Math.random() < 0.65) {
+            return availableSlots[Math.floor(Math.random() * availableSlots.length)];
+        }
+
+        let bestScore = -Infinity;
+        let candidates = [];
+        for (const slot of availableSlots) {
+            const captures = this.getCrossTargets(slot.r, slot.c);
+            let score = 0;
+            for (const { r, c } of captures) {
+                const owner = this.board[r][c].owner;
+                if (owner === 'player') score += 2;
+                else if (owner === null) score += 1;
+            }
+            if (score > bestScore) {
+                bestScore = score;
+                candidates = [slot];
+            } else if (score === bestScore) {
+                candidates.push(slot);
+            }
+        }
+        return candidates[Math.floor(Math.random() * candidates.length)];
+    }
+
+    // [보통] 즉각적인 영토 득실(빈 땅 점령 + 상대 땅 탈환) 극대화 (정밀 탐욕 알고리즘)
+    calculateNormalMove(availableSlots) {
+        const scoredSlots = availableSlots.map(slot => ({
+            slot,
+            score: this.evaluateNormalSlot(slot.r, slot.c)
+        }));
+
+        scoredSlots.sort((a, b) => b.score - a.score);
+
+        // 15% 확률로 2순위 선택 (약간의 인간적인 유연함 부여)
+        if (scoredSlots.length > 1 && Math.random() < 0.15 && scoredSlots[1].score >= scoredSlots[0].score - 4) {
+            return scoredSlots[1].slot;
+        }
+
+        const topScore = scoredSlots[0].score;
+        const topCandidates = scoredSlots.filter(s => s.score === topScore).map(s => s.slot);
+        return topCandidates[Math.floor(Math.random() * topCandidates.length)];
+    }
+
+    evaluateNormalSlot(r, c) {
         let score = 0;
-        const directions = [[0, 0], [-1, 0], [1, 0], [0, -1], [0, 1]];
+        const targets = this.getCrossTargets(r, c);
 
         let neutralConverted = 0;
         let playerSteals = 0;
         let selfMaintained = 0;
 
-        directions.forEach(([dr, dc]) => {
+        for (const { r: nr, c: nc } of targets) {
+            const owner = this.board[nr][nc].owner;
+            if (owner === 'player') playerSteals++;
+            else if (owner === null) neutralConverted++;
+            else selfMaintained++;
+        }
+
+        // 점령 가치
+        score += neutralConverted * 10;
+        score += playerSteals * 25; // 상대 땅 탈환은 2배 가치(플레이어 -1, PC +1)
+        score += selfMaintained * 2;
+
+        // 중앙 지향 위치 가중치
+        const isInner = (r >= 1 && r <= 4 && c >= 1 && c <= 4);
+        const isCenter = (r >= 2 && r <= 3 && c >= 2 && c <= 3);
+        if (isCenter) score += 6;
+        else if (isInner) score += 3;
+
+        return score;
+    }
+
+    // [어려움] 1수 앞 플레이어 반격 예측 (Minimax 1-ply Lookahead) + 요충지 사전 봉쇄 + 중앙 요새화
+    calculateHardMove(availableSlots) {
+        // 플레이어 입장에서 현재 가장 위험한 대형 점령 자리 분석 (사전 차단 보너스용)
+        const playerThreatMap = {};
+        for (const slot of availableSlots) {
+            let threat = 0;
+            const targets = this.getCrossTargets(slot.r, slot.c);
+            for (const { r: nr, c: nc } of targets) {
+                const owner = this.board[nr][nc].owner;
+                if (owner === 'pc') threat += 28;
+                else if (owner === null) threat += 10;
+            }
+            playerThreatMap[`${slot.r},${slot.c}`] = threat;
+        }
+
+        let bestScore = -Infinity;
+        let bestCandidates = [];
+
+        for (const slot of availableSlots) {
+            const { r, c } = slot;
+            let moveScore = 0;
+
+            // 1) 즉각 획득 점수
+            const targets = this.getCrossTargets(r, c);
+            let neutralConverted = 0;
+            let playerSteals = 0;
+            let selfMaintained = 0;
+
+            for (const { r: nr, c: nc } of targets) {
+                const owner = this.board[nr][nc].owner;
+                if (owner === 'player') playerSteals++;
+                else if (owner === null) neutralConverted++;
+                else selfMaintained++;
+            }
+
+            moveScore += neutralConverted * 11;
+            moveScore += playerSteals * 28;
+            moveScore += selfMaintained * 2;
+
+            // 2) 중앙 핵심 지배력 가중치
+            if ((r === 2 || r === 3) && (c === 2 || c === 3)) moveScore += 9;
+            else if (r >= 1 && r <= 4 && c >= 1 && c <= 4) moveScore += 5;
+
+            // 3) 플레이어의 핵심 요충지 봉쇄 (Interception)
+            const playerThreatHere = playerThreatMap[`${r},${c}`] || 0;
+            if (playerThreatHere >= 28) {
+                moveScore += Math.floor(playerThreatHere * 0.75);
+            }
+
+            // 4) 1수 앞 반격 시뮬레이션 (Lookahead Counter-Strike Evaluation)
+            const simOwners = [];
+            for (let i = 0; i < BOARD_SIZE; i++) {
+                simOwners[i] = [];
+                for (let j = 0; j < BOARD_SIZE; j++) {
+                    simOwners[i][j] = this.board[i][j].owner;
+                }
+            }
+
+            // 가상 수 적용
+            for (const { r: tr, c: tc } of targets) {
+                simOwners[tr][tc] = 'pc';
+            }
+
+            // 가상 보드에서 플레이어의 다음 최대 반격 피해량 측정
+            let maxPlayerCounter = 0;
+            for (const nextSlot of availableSlots) {
+                if (nextSlot.r === r && nextSlot.c === c) continue;
+                let counterScore = 0;
+                const counterTargets = this.getCrossTargets(nextSlot.r, nextSlot.c);
+                for (const { r: cr, c: cc } of counterTargets) {
+                    if (simOwners[cr][cc] === 'pc') counterScore += 26;
+                    else if (simOwners[cr][cc] === null) counterScore += 10;
+                }
+                if (counterScore > maxPlayerCounter) {
+                    maxPlayerCounter = counterScore;
+                }
+            }
+
+            // 플레이어에게 큰 반격을 허용하는 수 감점
+            moveScore -= Math.floor(maxPlayerCounter * 0.65);
+
+            if (moveScore > bestScore) {
+                bestScore = moveScore;
+                bestCandidates = [slot];
+            } else if (moveScore === bestScore) {
+                bestCandidates.push(slot);
+            }
+        }
+
+        return bestCandidates[Math.floor(Math.random() * bestCandidates.length)];
+    }
+
+    getCrossTargets(r, c) {
+        const directions = [[0, 0], [-1, 0], [1, 0], [0, -1], [0, 1]];
+        const neighbors = [];
+        for (const [dr, dc] of directions) {
             const nr = r + dr;
             const nc = c + dc;
             if (this.isValidCoord(nr, nc)) {
-                const owner = this.board[nr][nc].owner;
-                if (owner === 'player') {
-                    playerSteals++; // Stealing player's land is high value!
-                } else if (owner === null) {
-                    neutralConverted++; // Claiming neutral
-                } else {
-                    selfMaintained++;
-                }
+                neighbors.push({ r: nr, c: nc });
             }
-        });
-
-        // Basic gain calculation
-        score += neutralConverted * 10;
-        score += playerSteals * 22; // Stealing is double value swing!
-        score += selfMaintained * 2;
-
-        // Positional heuristics
-        // Corners: 3 targets total (center + 2 neighbors)
-        // Edges: 4 targets total (center + 3 neighbors)
-        // Center: 5 targets total (center + 4 neighbors)
-        const isCorner = (r === 0 || r === BOARD_SIZE - 1) && (c === 0 || c === BOARD_SIZE - 1);
-        const isEdge = (r === 0 || r === BOARD_SIZE - 1 || c === 0 || c === BOARD_SIZE - 1);
-
-        if (!isEdge) {
-            score += 5; // Center positions have higher cross capture capacity
         }
-
-        // Hard Mode: Add lookahead / counter-strike defensive awareness
-        if (this.difficulty === 'hard') {
-            // Check if placing here blocks player's high value placement
-            let playerPotentialThreat = 0;
-            directions.forEach(([dr, dc]) => {
-                const nr = r + dr;
-                const nc = c + dc;
-                if (this.isValidCoord(nr, nc) && this.board[nr][nc].coin === null) {
-                    playerPotentialThreat += 2;
-                }
-            });
-            score += playerPotentialThreat;
-        }
-
-        return score;
+        return neighbors;
     }
 
     // ==========================================================================
@@ -512,6 +681,13 @@ class LandGame {
         this.barPlayer.style.width = `${(playerLand / TOTAL_TILES) * 100}%`;
         this.barPc.style.width = `${(pcLand / TOTAL_TILES) * 100}%`;
 
+        // HUD Difficulty Badge
+        const config = DIFFICULTY_CONFIG[this.difficulty] || DIFFICULTY_CONFIG.normal;
+        if (this.hudDiffBadge) {
+            this.hudDiffBadge.textContent = config.fullLabel;
+            this.hudDiffBadge.className = `hud-diff-pill ${config.className}`;
+        }
+
         // Turn Indication
         if (this.currentTurn === 'player') {
             this.cardPlayer.classList.add('active-turn');
@@ -520,7 +696,7 @@ class LandGame {
         } else {
             this.cardPlayer.classList.remove('active-turn');
             this.cardPc.classList.add('active-turn');
-            this.turnTextEl.textContent = '컴퓨터의 턴입니다...';
+            this.turnTextEl.textContent = `컴퓨터(${config.label})의 턴입니다...`;
         }
     }
 
@@ -533,6 +709,12 @@ class LandGame {
         const { playerLand, pcLand } = this.calculateScores();
 
         // Update Result Screen
+        const config = DIFFICULTY_CONFIG[this.difficulty] || DIFFICULTY_CONFIG.normal;
+        if (this.resultDiffBadge) {
+            this.resultDiffBadge.textContent = `${config.fullLabel} 난이도`;
+            this.resultDiffBadge.className = `result-diff-badge ${config.className}`;
+        }
+
         this.resPlayerScore.textContent = playerLand;
         this.resPlayerRate.textContent = `${((playerLand / TOTAL_TILES) * 100).toFixed(1)}% 영토 점유`;
         this.resPlayerCoins.textContent = `배치한 코인: ${this.playerCoins}개`;
