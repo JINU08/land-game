@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>땅따먹기 배틀 : LAND CONQUEST</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800;900&family=Pretendard:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app" class="game-wrapper">
+        <!-- Floating Ambient Background Elements -->
+        <div class="ambient-glow glow-red"></div>
+        <div class="ambient-glow glow-blue"></div>
+        <canvas id="confetti-canvas"></canvas>
+
+        <!-- ==================== 1. INTRO SCREEN ==================== -->
+        <section id="screen-intro" class="screen active">
+            <div class="intro-container">
+                <div class="intro-media-card">
+                    <div class="banner-wrapper">
+                        <img src="intro_banner.jpg" alt="Land Conquest Battle Banner" class="intro-banner-img">
+                        <div class="banner-overlay"></div>
+                        <div class="badge-tag">TACTICAL BOARD GAME</div>
+                    </div>
+                </div>
+
+                <div class="intro-content">
+                    <div class="title-group">
+                        <span class="sub-title">1 VS 1 TERRITORY BATTLE</span>
+                        <h1 class="main-title">
+                            <span class="red-text">LAND</span>
+                            <span class="vs-badge">VS</span>
+                            <span class="blue-text">CONQUEST</span>
+                        </h1>
+                        <p class="kor-title">신개념 6x6 전술 땅따먹기 대격돌</p>
+                    </div>
+
+                    <div class="game-rules-card">
+                        <h3 class="rules-header">⚔️ 게임 핵심 규칙</h3>
+                        <div class="rule-items">
+                            <div class="rule-item">
+                                <div class="rule-icon red-coin-mini"></div>
+                                <div class="rule-desc">
+                                    <strong>플레이어(RED) vs 컴퓨터(BLUE)</strong>
+                                    <p>6x6 전장의 빈 칸에 번갈아 코인을 배치합니다.</p>
+                                </div>
+                            </div>
+                            <div class="rule-item">
+                                <div class="rule-icon wave-mini">➕</div>
+                                <div class="rule-desc">
+                                    <strong>십자 점령 (상·하·좌·우)</strong>
+                                    <p>돌을 놓으면 해당 칸과 <strong>인접한 상하좌우 칸</strong>이 즉시 내 땅이 됩니다!</p>
+                                </div>
+                            </div>
+                            <div class="rule-item">
+                                <div class="rule-icon crown-mini">👑</div>
+                                <div class="rule-desc">
+                                    <strong>최종 승리 조건</strong>
+                                    <p>36개 칸이 모두 채워졌을 때 <strong>더 많은 땅을 지배한 자</strong>가 승리합니다.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="settings-panel">
+                        <div class="setting-group">
+                            <label>AI 난이도</label>
+                            <div class="pill-selector" id="ai-difficulty-select">
+                                <button type="button" class="pill-btn" data-diff="easy">입문</button>
+                                <button type="button" class="pill-btn active" data-diff="normal">일반</button>
+                                <button type="button" class="pill-btn" data-diff="hard">마스터</button>
+                            </div>
+                        </div>
+                        <div class="setting-group">
+                            <label>선공 선택</label>
+                            <div class="pill-selector" id="turn-order-select">
+                                <button type="button" class="pill-btn active" data-first="player">🔴 내가 선공</button>
+                                <button type="button" class="pill-btn" data-first="pc">🔵 PC 선공</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="intro-actions">
+                        <button id="btn-start-game" class="btn-primary-glow">
+                            <span class="btn-shine"></span>
+                            <span class="btn-text">게임 스타트 ➔</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== 2. GAME SCREEN ==================== -->
+        <section id="screen-game" class="screen">
+            <!-- Top Status Bar -->
+            <header class="game-header">
+                <!-- Player 1 Card (User) -->
+                <div class="player-card player-red" id="card-player">
+                    <div class="avatar-ring">
+                        <div class="avatar-coin red-coin-3d"></div>
+                    </div>
+                    <div class="player-info">
+                        <span class="player-role">PLAYER</span>
+                        <h2 class="player-name">당신 (레드)</h2>
+                        <div class="score-display">
+                            <span class="score-num" id="player-score">0</span>
+                            <span class="score-unit">칸 점령</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Center Match Status -->
+                <div class="match-center">
+                    <div class="territory-bar-container">
+                        <div class="territory-bar-labels">
+                            <span id="player-percent">50%</span>
+                            <span class="board-fill-status" id="empty-slots-count">남은 빈칸: 36/36</span>
+                            <span id="pc-percent">50%</span>
+                        </div>
+                        <div class="territory-bar">
+                            <div class="bar-fill bar-red" id="bar-player" style="width: 50%;"></div>
+                            <div class="bar-fill bar-blue" id="bar-pc" style="width: 50%;"></div>
+                        </div>
+                    </div>
+
+                    <div class="turn-announcer" id="turn-announcer">
+                        <span class="turn-dot"></span>
+                        <span class="turn-message" id="turn-text">당신의 턴입니다! 빈 칸을 선택하세요.</span>
+                    </div>
+                </div>
+
+                <!-- Player 2 Card (PC) -->
+                <div class="player-card player-blue" id="card-pc">
+                    <div class="avatar-ring">
+                        <div class="avatar-coin blue-coin-3d"></div>
+                    </div>
+                    <div class="player-info">
+                        <span class="player-role">AI OPPONENT</span>
+                        <h2 class="player-name">컴퓨터 (블루)</h2>
+                        <div class="score-display">
+                            <span class="score-num" id="pc-score">0</span>
+                            <span class="score-unit">칸 점령</span>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Game Control Toolbar -->
+            <div class="game-toolbar">
+                <button id="btn-sound-toggle" class="tool-btn" title="사운드 켜기/끄기">
+                    <span id="sound-icon">🔊</span> 소리
+                </button>
+                <div class="status-pill" id="action-hint">
+                    💡 돌을 놓으면 <strong>상하좌우 인접 4칸</strong>까지 내 땅으로 흡수합니다!
+                </div>
+                <button id="btn-give-up" class="tool-btn danger" title="게임 포기하고 인트로로">
+                    🏳️ 기권
+                </button>
+            </div>
+
+            <!-- Central 6x6 Battle Grid -->
+            <main class="board-stage">
+                <div class="board-frame">
+                    <!-- Coordinate indicators -->
+                    <div class="board-grid" id="game-board">
+                        <!-- 36 Cells will be dynamically generated by JS -->
+                    </div>
+                </div>
+            </main>
+
+            <!-- Bottom Floating Log / Feedback -->
+            <footer class="game-footer">
+                <div class="recent-event-log" id="event-log">
+                    <span class="log-tag">READY</span> 전장에 코인을 배치하여 영토 확장을 시작하세요!
+                </div>
+            </footer>
+
+            <!-- In-Game Custom Modal for Surrender/End Game -->
+            <div id="modal-confirm" class="custom-modal-backdrop">
+                <div class="custom-modal-box">
+                    <div class="modal-icon">🏳️</div>
+                    <h3 class="modal-title">전투를 기권하시겠습니까?</h3>
+                    <p class="modal-desc">기권 시 현재까지 점령한 영토 현황으로 최종 승패를 판정합니다.</p>
+                    <div class="modal-buttons">
+                        <button id="btn-modal-cancel" class="modal-btn secondary">계속 싸우기</button>
+                        <button id="btn-modal-confirm" class="modal-btn danger">기권하고 결과 보기</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ==================== 3. RESULT SCREEN ==================== -->
+        <section id="screen-result" class="screen">
+            <div class="result-container">
+                <div class="result-modal">
+                    <div class="trophy-wrapper" id="result-badge-icon">
+                        🏆
+                    </div>
+
+                    <h1 class="result-title" id="result-title">VICTORY!</h1>
+                    <p class="result-subtitle" id="result-subtitle">당신이 전장을 완벽히 지배했습니다!</p>
+
+                    <!-- Score Comparison Board -->
+                    <div class="result-scoreboard">
+                        <div class="score-box box-player">
+                            <div class="score-box-badge">YOU (RED)</div>
+                            <div class="score-big" id="result-player-score">24</div>
+                            <div class="score-rate" id="result-player-rate">66.7% 지배</div>
+                            <div class="coins-placed" id="result-player-coins">배치한 코인: 18개</div>
+                        </div>
+
+                        <div class="vs-divider">
+                            <span>VS</span>
+                        </div>
+
+                        <div class="score-box box-pc">
+                            <div class="score-box-badge">PC (BLUE)</div>
+                            <div class="score-big" id="result-pc-score">12</div>
+                            <div class="score-rate" id="result-pc-rate">33.3% 지배</div>
+                            <div class="coins-placed" id="result-pc-coins">배치한 코인: 18개</div>
+                        </div>
+                    </div>
+
+                    <!-- Mini Board Preview of final state -->
+                    <div class="final-board-peek">
+                        <div class="final-board-summary" id="final-stats-summary">
+                            총 36칸 중 <strong>24칸</strong> 차지 (12칸 격차 승리)
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="result-actions">
+                        <button id="btn-replay" class="btn-primary-glow">
+                            <span class="btn-shine"></span>
+                            <span class="btn-text">🔄 다시 한판 승부!</span>
+                        </button>
+                        <button id="btn-go-intro" class="btn-secondary">
+                            🏠 인트로 화면으로
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Scripts -->
+    <script src="audio.js"></script>
+    <script src="game.js"></script>
+</body>
+</html>

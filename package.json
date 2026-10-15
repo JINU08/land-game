@@ -1,0 +1,16 @@
+{
+  "name": "land-game",
+  "version": "1.0.0",
+  "description": "Tactical 6x6 Land Conquest Strategy Board Game",
+  "scripts": {
+    "dev": "npx -y serve . -l 5173",
+    "start": "npx -y serve . -l 5173"
+  },
+  "keywords": [
+    "game",
+    "board-game",
+    "tactical"
+  ],
+  "author": "",
+  "license": "ISC"
+}
