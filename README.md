@@ -2,6 +2,9 @@
 
 1 VS 1 턴제 전술 6x6 보드 게임 웹 애플리케이션입니다.
 
+## 🌐 라이브 데모
+👉 [https://land-game-rouge.vercel.app](https://land-game-rouge.vercel.app)
+
 ## 🎮 게임 소개
 - **6x6 전술 보드**: 상대방과 영토를 차지하고 점수를 겨루는 땅따먹기 배틀
 - **사운드 & 애니메이션 효과**: Web Audio API 기반의 효과음 및 시각 효과 탑재
